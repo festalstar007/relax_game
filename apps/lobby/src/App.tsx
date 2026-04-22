@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './App.css';
 
 function Lobby() {
@@ -9,6 +9,13 @@ function Lobby() {
       description: '经典逻辑填数字游戏',
       path: '/sudoku/', // 注意：这里通常跳转到独立部署的路径
       icon: '🧩'
+    },
+    {
+      id: 'minesweeper',
+      name: '扫雷',
+      description: '翻开方格、标记地雷，挑战逻辑与运气',
+      path: '/minesweeper/',
+      icon: '💣'
     }
   ];
 

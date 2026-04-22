@@ -7,7 +7,11 @@ export default defineConfig({
   server: {
     proxy: {
       '/sudoku': {
-        target: 'http://localhost:5174',
+        target: 'http://127.0.0.1:5174',
+        changeOrigin: true,
+      },
+      '/minesweeper': {
+        target: 'http://127.0.0.1:5175',
         changeOrigin: true,
       }
     }

@@ -7,6 +7,7 @@
 - `apps/lobby`: 游戏大厅（落地页），作为所有游戏的入口。
 - `packages/games/`: 存放各个独立的游戏。
   - `sudoku`: 数独游戏。
+  - `minesweeper`: 扫雷小游戏。
 
 ## 开发环境运行
 
@@ -22,6 +23,9 @@
    
    # 启动数独 (默认 5174 端口)
    pnpm --filter @game/sudoku dev
+
+   # 启动扫雷 (默认 5175 端口)
+   pnpm --filter @game/minesweeper dev
    ```
 
 3. 访问 `http://localhost:5173` 即可看到大厅，并跳转到各游戏。

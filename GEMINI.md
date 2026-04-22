@@ -16,6 +16,7 @@
 - `apps/lobby`: 游戏大厅应用，提供游戏导航和统一入口。
 - `packages/games/`: 存放所有游戏包的目录。
     - `packages/games/sudoku`: 经典的数独游戏。
+    - `packages/games/minesweeper`: 经典的扫雷小游戏。
 
 ---
 
@@ -26,11 +27,14 @@
 - **运行所有项目 (开发模式)**: 暂无一键启动脚本，需分别启动：
     - 启动大厅: `pnpm --filter lobby dev` (默认端口: 5173)
     - 启动数独: `pnpm --filter @game/sudoku dev` (默认端口: 5174)
+    - 启动扫雷: `pnpm --filter @game/minesweeper dev` (默认端口: 5175)
 - **全局构建**: `pnpm build` (在根目录执行)
 - **代码检查**: `pnpm lint`
 
 ### 开发代理说明
-大厅应用 (`apps/lobby`) 配置了 Vite 代理，在开发环境下会将 `/sudoku` 的请求转发至数独开发服务器 (`http://localhost:5174`)，以确保导航跳转能够正常工作。
+大厅应用 (`apps/lobby`) 配置了 Vite 代理，在开发环境下会将请求转发到对应小游戏开发服务器，以确保导航跳转能够正常工作：
+- `/sudoku` -> `http://localhost:5174`
+- `/minesweeper` -> `http://localhost:5175`
 
 ---
 
