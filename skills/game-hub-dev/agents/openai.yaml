@@ -1,0 +1,4 @@
+interface:
+  display_name: "Game Hub 开发"
+  short_description: "在 relax_game monorepo 中维护小游戏与大厅联动"
+  default_prompt: "在 relax_game 中完成小游戏接入、大厅路由与代理配置、文档同步更新"
