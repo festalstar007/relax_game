@@ -17,6 +17,7 @@
 - `packages/games/`: 存放所有游戏包的目录。
     - `packages/games/sudoku`: 经典的数独游戏。
     - `packages/games/minesweeper`: 经典的扫雷小游戏。
+    - `packages/games/bulls-and-cows`: 猜数字（1A2B）小游戏。
 
 ---
 
@@ -29,6 +30,7 @@
     - 启动大厅: `pnpm --filter lobby dev` (默认端口: 5173)
     - 启动数独: `pnpm --filter @game/sudoku dev` (默认端口: 5174)
     - 启动扫雷: `pnpm --filter @game/minesweeper dev` (默认端口: 5175)
+    - 启动猜数字: `pnpm --filter @game/bulls-and-cows dev` (默认端口: 5176)
 - **全局构建**: `pnpm build` (在根目录执行)
 - **代码检查**: `pnpm lint`
 
@@ -36,6 +38,7 @@
 大厅应用 (`apps/lobby`) 配置了 Vite 代理，在开发环境下会将请求转发到对应小游戏开发服务器，以确保导航跳转能够正常工作：
 - `/sudoku` -> `http://localhost:5174`
 - `/minesweeper` -> `http://localhost:5175`
+- `/bulls-and-cows` -> `http://localhost:5176`
 
 ---
 

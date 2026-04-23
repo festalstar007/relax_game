@@ -16,6 +16,10 @@ export default defineConfig({
       '/minesweeper': {
         target: 'http://127.0.0.1:5175',
         changeOrigin: true,
+      },
+      '/bulls-and-cows': {
+        target: 'http://127.0.0.1:5176',
+        changeOrigin: true,
       }
     }
   }

@@ -8,6 +8,7 @@
 - `packages/games/`: 存放各个独立的游戏。
   - `sudoku`: 数独游戏。
   - `minesweeper`: 扫雷小游戏。
+  - `bulls-and-cows`: 猜数字（1A2B）小游戏。
 
 ## 开发环境运行
 
@@ -31,6 +32,9 @@
 
    # 启动扫雷 (默认 5175 端口)
    pnpm --filter @game/minesweeper dev
+
+   # 启动猜数字 (默认 5176 端口)
+   pnpm --filter @game/bulls-and-cows dev
    ```
 
 4. 访问 `http://localhost:5173` 即可看到大厅，并跳转到各游戏。

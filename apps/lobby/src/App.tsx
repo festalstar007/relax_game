@@ -16,6 +16,13 @@ function Lobby() {
       description: '翻开方格、标记地雷，挑战逻辑与运气',
       path: '/minesweeper/',
       icon: '💣'
+    },
+    {
+      id: 'bulls-and-cows',
+      name: '猜数字',
+      description: '根据 1A2B 反馈逐步推理，猜中 4 位不重复数字',
+      path: '/bulls-and-cows/',
+      icon: '🐂'
     }
   ];
 
