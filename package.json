@@ -4,7 +4,10 @@
   "scripts": {
     "dev": "pnpm --filter lobby dev",
     "dev:all": "pnpm -r --parallel --stream --filter lobby --filter \"@game/*\" dev",
-    "build": "pnpm -r build",
+    "build": "pnpm run build:all",
+    "build:all": "pnpm -r --filter lobby --filter \"@game/*\" build",
+    "build:site": "node scripts/build-site.mjs",
+    "deploy:build": "pnpm run build:all && pnpm run build:site",
     "lint": "pnpm -r lint"
   }
 }

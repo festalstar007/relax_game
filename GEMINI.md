@@ -31,7 +31,8 @@
     - 启动数独: `pnpm --filter @game/sudoku dev` (默认端口: 5174)
     - 启动扫雷: `pnpm --filter @game/minesweeper dev` (默认端口: 5175)
     - 启动猜数字: `pnpm --filter @game/bulls-and-cows dev` (默认端口: 5176)
-- **全局构建**: `pnpm build` (在根目录执行)
+- **全局构建**: `pnpm build` (在根目录执行，等价于 `pnpm build:all`)
+- **部署构建 (Cloudflare Pages 单项目)**: `pnpm deploy:build` (生成 `dist-site/`)
 - **代码检查**: `pnpm lint`
 
 ### 开发代理说明
@@ -39,6 +40,18 @@
 - `/sudoku` -> `http://localhost:5174`
 - `/minesweeper` -> `http://localhost:5175`
 - `/bulls-and-cows` -> `http://localhost:5176`
+
+### Cloudflare Pages（单域名多路径）
+- 使用 1 个 Pages 项目，输出目录为 `dist-site/`。
+- `pnpm deploy:build` 会自动：
+  - 构建 `lobby` 与所有 `@game/*` 游戏包
+  - 聚合到 `dist-site/`
+  - 生成 `dist-site/_redirects` 处理路径回退
+- Pages 配置建议：
+  - Build command: `pnpm install --frozen-lockfile && pnpm deploy:build`
+  - Build output directory: `dist-site`
+  - Production branch: `main`
+- 自定义域名建议绑定到该唯一 Pages 项目；旧子域名可按需 301 到对应路径。
 
 ---
 

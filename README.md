@@ -39,6 +39,37 @@
 
 4. 访问 `http://localhost:5173` 即可看到大厅，并跳转到各游戏。
 
+## Cloudflare Pages 部署（单域名多路径）
+
+目标路径：
+- `/` -> lobby
+- `/sudoku/`
+- `/minesweeper/`
+- `/bulls-and-cows/`
+
+构建命令：
+
+```bash
+pnpm deploy:build
+```
+
+该命令会：
+- 构建大厅和所有 `@game/*` 游戏包
+- 聚合产物到 `dist-site/`
+- 自动生成 `dist-site/_redirects`（用于 SPA 刷新回退）
+
+Cloudflare Pages 项目配置（仅 1 个项目）：
+- Build command: `pnpm install --frozen-lockfile && pnpm deploy:build`
+- Build output directory: `dist-site`
+- Production branch: `main`
+
+自定义域名配置：
+- 在该 Pages 项目里添加主域名或 `www`（例如 `example.com`）
+- 旧子域名可选做 301 跳转到新路径：
+  - `sudoku.example.com` -> `https://example.com/sudoku/`
+  - `minesweeper.example.com` -> `https://example.com/minesweeper/`
+  - `bulls-and-cows.example.com` -> `https://example.com/bulls-and-cows/`
+
 ## Git 规范
 
 - 所有的提交应当在根目录下进行。
