@@ -3,6 +3,7 @@
   "private": true,
   "scripts": {
     "dev": "pnpm --filter lobby dev",
+    "dev:all": "pnpm -r --parallel --stream --filter lobby --filter \"@game/*\" dev",
     "build": "pnpm -r build",
     "lint": "pnpm -r lint"
   }

@@ -18,6 +18,11 @@
 
 2. 同时启动大厅和所有游戏（开发模式）：
    ```bash
+   pnpm dev:all
+   ```
+
+3. 也可分别启动（开发模式）：
+   ```bash
    # 启动大厅 (默认 5173 端口)
    pnpm --filter lobby dev
    
@@ -28,7 +33,7 @@
    pnpm --filter @game/minesweeper dev
    ```
 
-3. 访问 `http://localhost:5173` 即可看到大厅，并跳转到各游戏。
+4. 访问 `http://localhost:5173` 即可看到大厅，并跳转到各游戏。
 
 ## Git 规范
 

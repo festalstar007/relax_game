@@ -24,7 +24,8 @@
 
 ### 基础命令
 - **安装依赖**: `pnpm install`
-- **运行所有项目 (开发模式)**: 暂无一键启动脚本，需分别启动：
+- **运行所有项目 (开发模式，一键)**: `pnpm dev:all`
+- **运行所有项目 (开发模式，分别启动)**:
     - 启动大厅: `pnpm --filter lobby dev` (默认端口: 5173)
     - 启动数独: `pnpm --filter @game/sudoku dev` (默认端口: 5174)
     - 启动扫雷: `pnpm --filter @game/minesweeper dev` (默认端口: 5175)
