@@ -43,6 +43,36 @@
   font-weight: 600;
 }
 
+.mobile-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.mode-button {
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  background: #0f766e;
+  color: #ffffff;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.mode-button:hover {
+  background: #0d5f59;
+}
+
+.toggle-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: #334155;
+}
+
 .restart-button:hover {
   background: #1d4ed8;
 }
@@ -132,5 +162,15 @@
 
   .cell {
     font-size: 16px;
+  }
+
+  .mobile-controls {
+    gap: 10px;
+  }
+
+  .mode-button,
+  .restart-button {
+    min-height: 40px;
+    padding: 10px 14px;
   }
 }

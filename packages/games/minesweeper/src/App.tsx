@@ -1,4 +1,12 @@
-import { useEffect, useMemo, useState, type CSSProperties, type MouseEvent } from 'react'
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type MouseEvent,
+  type TouchEvent,
+} from 'react'
 import './App.css'
 
 type GameStatus = 'ready' | 'playing' | 'won' | 'lost'
@@ -10,9 +18,13 @@ type Cell = {
   adjacentMines: number
 }
 
+type InputMode = 'reveal' | 'flag'
+
 const ROWS = 10
 const COLS = 10
 const MINE_COUNT = 15
+const LONG_PRESS_MS = 350
+const TOUCH_MOVE_THRESHOLD = 10
 
 const OFFSETS = [
   [-1, -1],
@@ -175,6 +187,13 @@ function App() {
   const [board, setBoard] = useState<Cell[][]>(() => createEmptyBoard())
   const [status, setStatus] = useState<GameStatus>('ready')
   const [seconds, setSeconds] = useState(0)
+  const [inputMode, setInputMode] = useState<InputMode>('reveal')
+  const [longPressEnabled, setLongPressEnabled] = useState(true)
+  const [isCoarsePointer, setIsCoarsePointer] = useState(false)
+
+  const longPressTimerRef = useRef<number | null>(null)
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null)
+  const suppressNextClickRef = useRef(false)
 
   const minesLeft = useMemo(() => MINE_COUNT - countFlags(board), [board])
 
@@ -192,13 +211,36 @@ function App() {
     }
   }, [status])
 
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(pointer: coarse)')
+    const handleChange = (): void => {
+      setIsCoarsePointer(mediaQuery.matches)
+    }
+
+    handleChange()
+    mediaQuery.addEventListener('change', handleChange)
+    return () => {
+      mediaQuery.removeEventListener('change', handleChange)
+    }
+  }, [])
+
+  function clearLongPress(): void {
+    if (longPressTimerRef.current !== null) {
+      window.clearTimeout(longPressTimerRef.current)
+      longPressTimerRef.current = null
+    }
+    touchStartRef.current = null
+  }
+
   function restartGame(): void {
+    clearLongPress()
     setBoard(createEmptyBoard())
     setStatus('ready')
     setSeconds(0)
+    setInputMode('reveal')
   }
 
-  function handleCellClick(row: number, col: number): void {
+  function revealCell(row: number, col: number): void {
     if (status === 'won' || status === 'lost') {
       return
     }
@@ -237,13 +279,7 @@ function App() {
     setBoard(nextBoard)
   }
 
-  function handleContextMenu(
-    event: MouseEvent<HTMLButtonElement>,
-    row: number,
-    col: number,
-  ): void {
-    event.preventDefault()
-
+  function toggleFlag(row: number, col: number): void {
     if (status === 'won' || status === 'lost') {
       return
     }
@@ -261,16 +297,94 @@ function App() {
     })
   }
 
+  function performAction(row: number, col: number, actionMode: InputMode): void {
+    if (actionMode === 'flag') {
+      toggleFlag(row, col)
+      return
+    }
+    revealCell(row, col)
+  }
+
+  function handleCellClick(row: number, col: number): void {
+    if (suppressNextClickRef.current) {
+      suppressNextClickRef.current = false
+      return
+    }
+    performAction(row, col, isCoarsePointer ? inputMode : 'reveal')
+  }
+
+  function handleContextMenu(event: MouseEvent<HTMLButtonElement>, row: number, col: number): void {
+    event.preventDefault()
+    toggleFlag(row, col)
+  }
+
+  function handleTouchStart(event: TouchEvent<HTMLButtonElement>, row: number, col: number): void {
+    if (!isCoarsePointer || status === 'won' || status === 'lost' || !longPressEnabled) {
+      return
+    }
+
+    const touch = event.touches[0]
+
+    clearLongPress()
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY }
+    longPressTimerRef.current = window.setTimeout(() => {
+      suppressNextClickRef.current = true
+      toggleFlag(row, col)
+      if (navigator.vibrate) {
+        navigator.vibrate(10)
+      }
+      clearLongPress()
+    }, LONG_PRESS_MS)
+  }
+
+  function handleTouchMove(event: TouchEvent<HTMLButtonElement>): void {
+    if (!isCoarsePointer || !longPressEnabled || !touchStartRef.current) {
+      return
+    }
+
+    const touch = event.touches[0]
+    const dx = Math.abs(touch.clientX - touchStartRef.current.x)
+    const dy = Math.abs(touch.clientY - touchStartRef.current.y)
+    if (dx > TOUCH_MOVE_THRESHOLD || dy > TOUCH_MOVE_THRESHOLD) {
+      clearLongPress()
+    }
+  }
+
+  function handleTouchEnd(): void {
+    clearLongPress()
+  }
+
   return (
     <main className="container">
       <section className="panel">
         <h1>扫雷小游戏</h1>
-        <p className="hint">左键开格，右键插旗，首击安全。</p>
+        <p className="hint">
+          {isCoarsePointer ? '点击按当前模式操作，支持长按插旗，首击安全。' : '左键开格，右键插旗，首击安全。'}
+        </p>
         <div className="status-row">
           <span>状态：{statusText(status)}</span>
           <span>剩余雷数：{minesLeft}</span>
           <span>用时：{seconds}s</span>
         </div>
+        {isCoarsePointer ? (
+          <div className="mobile-controls">
+            <button
+              type="button"
+              className="mode-button"
+              onClick={() => setInputMode((current) => (current === 'reveal' ? 'flag' : 'reveal'))}
+            >
+              当前模式：{inputMode === 'reveal' ? '开格' : '插旗'}
+            </button>
+            <label className="toggle-row">
+              <input
+                type="checkbox"
+                checked={longPressEnabled}
+                onChange={(event) => setLongPressEnabled(event.target.checked)}
+              />
+              长按插旗
+            </label>
+          </div>
+        ) : null}
         <button type="button" className="restart-button" onClick={restartGame}>
           重新开始
         </button>
@@ -306,6 +420,10 @@ function App() {
                 className={classNames}
                 onClick={() => handleCellClick(rowIndex, colIndex)}
                 onContextMenu={(event) => handleContextMenu(event, rowIndex, colIndex)}
+                onTouchStart={(event) => handleTouchStart(event, rowIndex, colIndex)}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                onTouchCancel={handleTouchEnd}
                 aria-label={`第${rowIndex + 1}行第${colIndex + 1}列`}
               >
                 {content}
