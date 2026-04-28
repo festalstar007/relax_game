@@ -158,6 +158,38 @@ function hasWon(board: Cell[][]): boolean {
   return true
 }
 
+function chordReveal(board: Cell[][], row: number, col: number): 'safe' | 'mine' {
+  const centerCell = board[row][col]
+  if (!centerCell.isRevealed || centerCell.adjacentMines <= 0) {
+    return 'safe'
+  }
+
+  const neighbors = getNeighbors(row, col)
+  const flaggedCount = neighbors.reduce((count, [nextRow, nextCol]) => {
+    return count + (board[nextRow][nextCol].isFlagged ? 1 : 0)
+  }, 0)
+
+  if (flaggedCount !== centerCell.adjacentMines) {
+    return 'safe'
+  }
+
+  for (const [nextRow, nextCol] of neighbors) {
+    const neighborCell = board[nextRow][nextCol]
+    if (neighborCell.isFlagged || neighborCell.isRevealed) {
+      continue
+    }
+
+    if (neighborCell.isMine) {
+      neighborCell.isRevealed = true
+      return 'mine'
+    }
+
+    revealConnectedCells(board, nextRow, nextCol)
+  }
+
+  return 'safe'
+}
+
 function countFlags(board: Cell[][]): number {
   let count = 0
   for (const row of board) {
@@ -315,6 +347,34 @@ function App() {
 
   function handleContextMenu(event: MouseEvent<HTMLButtonElement>, row: number, col: number): void {
     event.preventDefault()
+
+    const cell = board[row][col]
+    if (cell.isRevealed) {
+      if (status === 'won' || status === 'lost') {
+        return
+      }
+
+      const nextBoard = cloneBoard(board)
+      const revealResult = chordReveal(nextBoard, row, col)
+
+      if (revealResult === 'mine') {
+        revealAllMines(nextBoard)
+        setBoard(nextBoard)
+        setStatus('lost')
+        return
+      }
+
+      if (hasWon(nextBoard)) {
+        revealAllMines(nextBoard)
+        setBoard(nextBoard)
+        setStatus('won')
+        return
+      }
+
+      setBoard(nextBoard)
+      return
+    }
+
     toggleFlag(row, col)
   }
 
