@@ -20,9 +20,21 @@ type Cell = {
 
 type InputMode = 'reveal' | 'flag'
 
-const ROWS = 10
-const COLS = 10
-const MINE_COUNT = 15
+type DifficultyKey = 'beginner' | 'intermediate' | 'advanced'
+
+interface DifficultyConfig {
+  rows: number
+  cols: number
+  mines: number
+  label: string
+}
+
+const DIFFICULTIES: Record<DifficultyKey, DifficultyConfig> = {
+  beginner: { rows: 9, cols: 9, mines: 10, label: '初级' },
+  intermediate: { rows: 16, cols: 16, mines: 40, label: '中级' },
+  advanced: { rows: 16, cols: 30, mines: 99, label: '高级' },
+}
+
 const LONG_PRESS_MS = 350
 const TOUCH_MOVE_THRESHOLD = 10
 
@@ -37,9 +49,9 @@ const OFFSETS = [
   [1, 1],
 ] as const
 
-function createEmptyBoard(): Cell[][] {
-  return Array.from({ length: ROWS }, () =>
-    Array.from({ length: COLS }, () => ({
+function createEmptyBoard(rows: number, cols: number): Cell[][] {
+  return Array.from({ length: rows }, () =>
+    Array.from({ length: cols }, () => ({
       isMine: false,
       isRevealed: false,
       isFlagged: false,
@@ -52,33 +64,45 @@ function cloneBoard(board: Cell[][]): Cell[][] {
   return board.map((row) => row.map((cell) => ({ ...cell })))
 }
 
-function inBounds(row: number, col: number): boolean {
-  return row >= 0 && row < ROWS && col >= 0 && col < COLS
+function inBounds(row: number, col: number, rows: number, cols: number): boolean {
+  return row >= 0 && row < rows && col >= 0 && col < cols
 }
 
-function getNeighbors(row: number, col: number): Array<[number, number]> {
+function getNeighbors(
+  row: number,
+  col: number,
+  rows: number,
+  cols: number,
+): Array<[number, number]> {
   return OFFSETS.map(([dr, dc]) => [row + dr, col + dc] as [number, number]).filter(
-    ([nextRow, nextCol]) => inBounds(nextRow, nextCol),
+    ([nextRow, nextCol]) => inBounds(nextRow, nextCol, rows, cols),
   )
 }
 
-function placeMines(board: Cell[][], safeRow: number, safeCol: number): void {
+function placeMines(
+  board: Cell[][],
+  safeRow: number,
+  safeCol: number,
+  rows: number,
+  cols: number,
+  mineCount: number,
+): void {
   const protectedCells = new Set<string>([`${safeRow},${safeCol}`])
 
-  for (const [row, col] of getNeighbors(safeRow, safeCol)) {
+  for (const [row, col] of getNeighbors(safeRow, safeCol, rows, cols)) {
     protectedCells.add(`${row},${col}`)
   }
 
   const candidates: Array<[number, number]> = []
-  for (let row = 0; row < ROWS; row += 1) {
-    for (let col = 0; col < COLS; col += 1) {
+  for (let row = 0; row < rows; row += 1) {
+    for (let col = 0; col < cols; col += 1) {
       if (!protectedCells.has(`${row},${col}`)) {
         candidates.push([row, col])
       }
     }
   }
 
-  const mineLimit = Math.min(MINE_COUNT, candidates.length)
+  const mineLimit = Math.min(mineCount, candidates.length)
   for (let i = 0; i < mineLimit; i += 1) {
     const randomIndex = Math.floor(Math.random() * candidates.length)
     const [row, col] = candidates.splice(randomIndex, 1)[0]
@@ -86,15 +110,15 @@ function placeMines(board: Cell[][], safeRow: number, safeCol: number): void {
   }
 }
 
-function calculateAdjacentMines(board: Cell[][]): void {
-  for (let row = 0; row < ROWS; row += 1) {
-    for (let col = 0; col < COLS; col += 1) {
+function calculateAdjacentMines(board: Cell[][], rows: number, cols: number): void {
+  for (let row = 0; row < rows; row += 1) {
+    for (let col = 0; col < cols; col += 1) {
       if (board[row][col].isMine) {
         continue
       }
 
       let count = 0
-      for (const [nextRow, nextCol] of getNeighbors(row, col)) {
+      for (const [nextRow, nextCol] of getNeighbors(row, col, rows, cols)) {
         if (board[nextRow][nextCol].isMine) {
           count += 1
         }
@@ -104,14 +128,26 @@ function calculateAdjacentMines(board: Cell[][]): void {
   }
 }
 
-function buildBoard(safeRow: number, safeCol: number): Cell[][] {
-  const board = createEmptyBoard()
-  placeMines(board, safeRow, safeCol)
-  calculateAdjacentMines(board)
+function buildBoard(
+  rows: number,
+  cols: number,
+  mineCount: number,
+  safeRow: number,
+  safeCol: number,
+): Cell[][] {
+  const board = createEmptyBoard(rows, cols)
+  placeMines(board, safeRow, safeCol, rows, cols, mineCount)
+  calculateAdjacentMines(board, rows, cols)
   return board
 }
 
-function revealConnectedCells(board: Cell[][], startRow: number, startCol: number): void {
+function revealConnectedCells(
+  board: Cell[][],
+  startRow: number,
+  startCol: number,
+  rows: number,
+  cols: number,
+): void {
   const queue: Array<[number, number]> = [[startRow, startCol]]
 
   while (queue.length > 0) {
@@ -128,7 +164,7 @@ function revealConnectedCells(board: Cell[][], startRow: number, startCol: numbe
       continue
     }
 
-    for (const [nextRow, nextCol] of getNeighbors(row, col)) {
+    for (const [nextRow, nextCol] of getNeighbors(row, col, rows, cols)) {
       const nextCell = board[nextRow][nextCol]
       if (!nextCell.isMine && !nextCell.isRevealed && !nextCell.isFlagged) {
         queue.push([nextRow, nextCol])
@@ -158,13 +194,19 @@ function hasWon(board: Cell[][]): boolean {
   return true
 }
 
-function chordReveal(board: Cell[][], row: number, col: number): 'safe' | 'mine' {
+function chordReveal(
+  board: Cell[][],
+  row: number,
+  col: number,
+  rows: number,
+  cols: number,
+): 'safe' | 'mine' {
   const centerCell = board[row][col]
   if (!centerCell.isRevealed || centerCell.adjacentMines <= 0) {
     return 'safe'
   }
 
-  const neighbors = getNeighbors(row, col)
+  const neighbors = getNeighbors(row, col, rows, cols)
   const flaggedCount = neighbors.reduce((count, [nextRow, nextCol]) => {
     return count + (board[nextRow][nextCol].isFlagged ? 1 : 0)
   }, 0)
@@ -184,7 +226,7 @@ function chordReveal(board: Cell[][], row: number, col: number): 'safe' | 'mine'
       return 'mine'
     }
 
-    revealConnectedCells(board, nextRow, nextCol)
+    revealConnectedCells(board, nextRow, nextCol, rows, cols)
   }
 
   return 'safe'
@@ -216,7 +258,10 @@ function statusText(status: GameStatus): string {
 }
 
 function App() {
-  const [board, setBoard] = useState<Cell[][]>(() => createEmptyBoard())
+  const [difficultyKey, setDifficultyKey] = useState<DifficultyKey>('beginner')
+  const { rows, cols, mines: mineCount } = DIFFICULTIES[difficultyKey]
+
+  const [board, setBoard] = useState<Cell[][]>(() => createEmptyBoard(rows, cols))
   const [status, setStatus] = useState<GameStatus>('ready')
   const [seconds, setSeconds] = useState(0)
   const [inputMode, setInputMode] = useState<InputMode>('reveal')
@@ -227,7 +272,7 @@ function App() {
   const touchStartRef = useRef<{ x: number; y: number } | null>(null)
   const suppressNextClickRef = useRef(false)
 
-  const minesLeft = useMemo(() => MINE_COUNT - countFlags(board), [board])
+  const minesLeft = useMemo(() => mineCount - countFlags(board), [board, mineCount])
 
   useEffect(() => {
     if (status !== 'playing') {
@@ -264,9 +309,16 @@ function App() {
     touchStartRef.current = null
   }
 
-  function restartGame(): void {
+  function restartGame(newDifficulty?: DifficultyKey): void {
     clearLongPress()
-    setBoard(createEmptyBoard())
+    const targetDifficulty = newDifficulty || difficultyKey
+    const { rows: r, cols: c } = DIFFICULTIES[targetDifficulty]
+
+    if (newDifficulty) {
+      setDifficultyKey(newDifficulty)
+    }
+
+    setBoard(createEmptyBoard(r, c))
     setStatus('ready')
     setSeconds(0)
     setInputMode('reveal')
@@ -286,7 +338,7 @@ function App() {
     let nextStatus: GameStatus = status
 
     if (status === 'ready') {
-      nextBoard = buildBoard(row, col)
+      nextBoard = buildBoard(rows, cols, mineCount, row, col)
       nextStatus = 'playing'
     }
 
@@ -299,11 +351,14 @@ function App() {
       return
     }
 
-    revealConnectedCells(nextBoard, row, col)
+    revealConnectedCells(nextBoard, row, col, rows, cols)
 
     if (hasWon(nextBoard)) {
       revealAllMines(nextBoard)
       setStatus('won')
+      setTimeout(() => {
+        alert('恭喜你，挑战成功！')
+      }, 100)
     } else {
       setStatus(nextStatus)
     }
@@ -355,7 +410,7 @@ function App() {
       }
 
       const nextBoard = cloneBoard(board)
-      const revealResult = chordReveal(nextBoard, row, col)
+      const revealResult = chordReveal(nextBoard, row, col, rows, cols)
 
       if (revealResult === 'mine') {
         revealAllMines(nextBoard)
@@ -418,6 +473,18 @@ function App() {
     <main className="container">
       <section className="panel">
         <h1>扫雷小游戏</h1>
+        <div className="difficulty-selector">
+          {(Object.keys(DIFFICULTIES) as DifficultyKey[]).map((key) => (
+            <button
+              key={key}
+              type="button"
+              className={`difficulty-button ${difficultyKey === key ? 'active' : ''}`}
+              onClick={() => restartGame(key)}
+            >
+              {DIFFICULTIES[key].label}
+            </button>
+          ))}
+        </div>
         <p className="hint">
           {isCoarsePointer ? '点击按当前模式操作，支持长按插旗，首击安全。' : '左键开格，右键插旗，首击安全。'}
         </p>
@@ -445,12 +512,12 @@ function App() {
             </label>
           </div>
         ) : null}
-        <button type="button" className="restart-button" onClick={restartGame}>
+        <button type="button" className="restart-button" onClick={() => restartGame()}>
           重新开始
         </button>
       </section>
 
-      <section className="board" style={{ '--cols': `${COLS}` } as CSSProperties}>
+      <section className="board" style={{ '--cols': `${cols}` } as CSSProperties}>
         {board.map((row, rowIndex) =>
           row.map((cell, colIndex) => {
             const content = cell.isRevealed

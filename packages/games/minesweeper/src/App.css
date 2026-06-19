@@ -1,46 +1,78 @@
 .container {
-  max-width: 860px;
+  max-width: 1000px;
   margin: 0 auto;
-  padding: 32px 16px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 12px;
+}
+
+.difficulty-selector {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.difficulty-button {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 4px 10px;
+  background: #f9fafb;
+  color: #374151;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.difficulty-button:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.difficulty-button.active {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
 }
 
 .panel {
   background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 12px;
-  padding: 18px;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  padding: 14px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
 }
 
 .panel h1 {
-  margin: 0 0 8px;
-  font-size: 28px;
+  margin: 0 0 4px;
+  font-size: 22px;
 }
 
 .hint {
-  margin: 0 0 12px;
+  margin: 0 0 8px;
   color: #6b7280;
+  font-size: 13px;
 }
 
 .status-row {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   font-weight: 600;
+  font-size: 14px;
 }
 
 .restart-button {
   border: none;
-  border-radius: 8px;
-  padding: 8px 14px;
+  border-radius: 6px;
+  padding: 6px 12px;
   background: #2563eb;
   color: #ffffff;
   cursor: pointer;
   font-weight: 600;
+  font-size: 14px;
 }
 
 .mobile-controls {
@@ -48,17 +80,18 @@
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .mode-button {
   border: none;
-  border-radius: 8px;
-  padding: 8px 14px;
+  border-radius: 6px;
+  padding: 6px 12px;
   background: #0f766e;
   color: #ffffff;
   cursor: pointer;
   font-weight: 600;
+  font-size: 14px;
 }
 
 .mode-button:hover {
@@ -71,6 +104,7 @@
   gap: 6px;
   font-weight: 600;
   color: #334155;
+  font-size: 14px;
 }
 
 .restart-button:hover {
@@ -81,22 +115,31 @@
   background: #dbeafe;
   border: 1px solid #93c5fd;
   border-radius: 12px;
-  padding: 10px;
+  padding: 8px;
   display: grid;
   grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
-  gap: 4px;
+  gap: 3px;
+  max-width: 100%;
+  width: fit-content;
+  margin: 0 auto;
 }
 
 .cell {
   aspect-ratio: 1 / 1;
+  width: 32px;
+  height: 32px;
   border: 1px solid #64748b;
-  border-radius: 6px;
-  font-size: 18px;
+  border-radius: 4px;
+  font-size: 16px;
   font-weight: 700;
   line-height: 1;
   cursor: pointer;
   user-select: none;
   transition: background-color 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
 }
 
 .cell.hidden {
