@@ -9,11 +9,13 @@ type GuessRecord = {
   cows: number
 }
 
-const DIGITS = '0123456789'
+type DigitStatus = 'possible' | 'excluded' | 'confirmed'
+
+const DIGITS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 const ANSWER_LENGTH = 4
 
 function createAnswer(): string {
-  const pool = DIGITS.split('')
+  const pool = [...DIGITS]
   for (let i = pool.length - 1; i > 0; i -= 1) {
     const j = Math.floor(Math.random() * (i + 1))
     ;[pool[i], pool[j]] = [pool[j], pool[i]]
@@ -55,6 +57,11 @@ export default function App() {
   const [error, setError] = useState('')
   const [isWin, setIsWin] = useState(false)
 
+  // 辅助推理矩阵：matrix[position][digitIndex]
+  const [matrix, setMatrix] = useState<DigitStatus[][]>(() =>
+    Array.from({ length: ANSWER_LENGTH }, () => Array.from({ length: 10 }, () => 'possible')),
+  )
+
   const title = useMemo(() => (isWin ? '恭喜猜中！' : '开始推理，找出 4 位答案'), [isWin])
 
   const restart = () => {
@@ -63,6 +70,18 @@ export default function App() {
     setRecords([])
     setError('')
     setIsWin(false)
+    setMatrix(Array.from({ length: ANSWER_LENGTH }, () => Array.from({ length: 10 }, () => 'possible')))
+  }
+
+  const toggleDigit = (pos: number, dIdx: number) => {
+    setMatrix((prev) => {
+      const next = prev.map((row) => [...row])
+      const current = next[pos][dIdx]
+      if (current === 'possible') next[pos][dIdx] = 'excluded'
+      else if (current === 'excluded') next[pos][dIdx] = 'confirmed'
+      else next[pos][dIdx] = 'possible'
+      return next
+    })
   }
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -91,6 +110,31 @@ export default function App() {
     setGuess('')
     setError('')
 
+    // 自动推理
+    setMatrix((prev) => {
+      const next = prev.map((row) => [...row])
+      const guessDigits = [...trimmed]
+
+      // 情况 1: 0A 0B (全不中)
+      if (result.bulls === 0 && result.cows === 0) {
+        guessDigits.forEach((digit) => {
+          const dIdx = parseInt(digit)
+          for (let p = 0; p < ANSWER_LENGTH; p++) {
+            if (next[p][dIdx] === 'possible') next[p][dIdx] = 'excluded'
+          }
+        })
+      }
+      // 情况 2: 0A (位置全不对)
+      else if (result.bulls === 0) {
+        guessDigits.forEach((digit, p) => {
+          const dIdx = parseInt(digit)
+          if (next[p][dIdx] === 'possible') next[p][dIdx] = 'excluded'
+        })
+      }
+
+      return next
+    })
+
     if (result.bulls === ANSWER_LENGTH) {
       setIsWin(true)
     }
@@ -98,61 +142,85 @@ export default function App() {
 
   return (
     <main className="container">
-      <section className="panel">
-        <h1>猜数字（1A2B / Bulls and Cows）</h1>
-        <p className="rules">规则：系统生成 4 位不重复数字（允许首位为 0）。A 表示数字和位置都正确，B 表示数字正确但位置错误。</p>
-        <p className="status">{title}</p>
+      <div className="game-layout">
+        <div className="left-column">
+          <section className="panel">
+            <h1>猜数字 (1A2B)</h1>
+            <p className="rules">系统生成 4 位不重复数字。A:位置对，B:数字对位置错。</p>
+            <p className="status">{title}</p>
 
-        <form className="guess-form" onSubmit={onSubmit}>
-          <input
-            value={guess}
-            onChange={(event) => {
-              const next = event.target.value.replace(/\D/g, '').slice(0, ANSWER_LENGTH)
-              setGuess(next)
-            }}
-            placeholder="例如：0284"
-            inputMode="numeric"
-            autoComplete="off"
-            aria-label="输入4位数字"
-          />
-          <button type="submit" disabled={isWin}>提交</button>
-          <button type="button" className="secondary" onClick={restart}>重新开始</button>
-        </form>
+            <form className="guess-form" onSubmit={onSubmit}>
+              <input
+                value={guess}
+                onChange={(event) => {
+                  const next = event.target.value.replace(/\D/g, '').slice(0, ANSWER_LENGTH)
+                  setGuess(next)
+                }}
+                placeholder="例如：0284"
+                inputMode="numeric"
+                autoComplete="off"
+              />
+              <div className="form-buttons">
+                <button type="submit" disabled={isWin}>提交</button>
+                <button type="button" className="secondary" onClick={restart}>重置</button>
+              </div>
+            </form>
 
-        {error ? <p className="error">{error}</p> : null}
+            {error ? <p className="error">{error}</p> : null}
+            {isWin ? <p className="win">挑战成功！用时 {records.length} 次</p> : null}
+          </section>
 
-        {isWin ? (
-          <p className="win">你用了 {records.length} 次猜中答案。</p>
-        ) : (
-          <p className="hint">提示：优先尝试不同数字组合，逐步锁定位置。</p>
-        )}
-      </section>
-
-      <section className="panel history-panel">
-        <h2>猜测记录</h2>
-        {records.length === 0 ? (
-          <p className="empty">还没有记录，先猜一次试试。</p>
-        ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>回合</th>
-                <th>猜测</th>
-                <th>反馈</th>
-              </tr>
-            </thead>
-            <tbody>
-              {records.map((record) => (
-                <tr key={record.id}>
-                  <td>{record.id}</td>
-                  <td className="guess-value">{record.guess}</td>
-                  <td>{record.bulls}A{record.cows}B</td>
-                </tr>
+          <section className="panel helper-panel">
+            <h2>辅助推理</h2>
+            <p className="helper-hint">点击数字：蓝(可能) → 灰(排除) → 绿(确认)</p>
+            <div className="matrix">
+              {matrix.map((row, pIdx) => (
+                <div key={pIdx} className="matrix-row">
+                  <span className="pos-label">位{pIdx + 1}</span>
+                  <div className="digit-grid">
+                    {row.map((status, dIdx) => (
+                      <button
+                        key={dIdx}
+                        type="button"
+                        className={`digit-btn ${status}`}
+                        onClick={() => toggleDigit(pIdx, dIdx)}
+                      >
+                        {dIdx}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
-        )}
-      </section>
+            </div>
+          </section>
+        </div>
+
+        <section className="panel history-panel">
+          <h2>猜测记录</h2>
+          {records.length === 0 ? (
+            <p className="empty">无记录</p>
+          ) : (
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>猜测</th>
+                  <th>结果</th>
+                </tr>
+              </thead>
+              <tbody>
+                {records.map((record) => (
+                  <tr key={record.id}>
+                    <td>{record.id}</td>
+                    <td className="guess-value">{record.guess}</td>
+                    <td>{record.bulls}A{record.cows}B</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </section>
+      </div>
     </main>
   )
 }

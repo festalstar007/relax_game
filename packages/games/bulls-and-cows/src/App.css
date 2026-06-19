@@ -1,10 +1,117 @@
 .container {
-  max-width: 860px;
+  max-width: 1000px;
   margin: 0 auto;
-  padding: 32px 16px;
+  padding: 24px 16px;
+}
+
+.game-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 20px;
+  align-items: start;
+}
+
+.left-column {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 20px;
+}
+
+.panel {
+  background: #ffffff;
+  border: 1px solid #dbe2ea;
+  border-radius: 12px;
+  padding: 18px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+}
+
+.form-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.helper-panel h2 {
+  font-size: 18px;
+  margin-bottom: 4px;
+}
+
+.helper-hint {
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 12px;
+}
+
+.matrix {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.matrix-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pos-label {
+  font-weight: 700;
+  color: #475569;
+  min-width: 40px;
+  font-size: 14px;
+}
+
+.digit-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 4px;
+  flex: 1;
+}
+
+.digit-btn {
+  aspect-ratio: 1;
+  padding: 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: white;
+}
+
+.digit-btn.possible {
+  background: #f8fafc;
+  color: #2563eb;
+  border-color: #bfdbfe;
+}
+
+.digit-btn.excluded {
+  background: #f1f5f9;
+  color: #94a3b8;
+  text-decoration: line-through;
+  border-color: #e2e8f0;
+}
+
+.digit-btn.confirmed {
+  background: #22c55e;
+  color: white;
+  border-color: #16a34a;
+}
+
+.history-panel {
+  height: fit-content;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+@media (max-width: 850px) {
+  .game-layout {
+    grid-template-columns: 1fr;
+  }
+  
+  .history-panel {
+    max-height: none;
+  }
 }
 
 .panel {
